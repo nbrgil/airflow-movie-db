@@ -14,6 +14,7 @@ ENV TERM linux
 # Airflow
 ARG AIRFLOW_VERSION=1.8.1
 ARG AIRFLOW_HOME=/usr/local/airflow
+ARG HOST_AIRFLOW_HOME
 
 # Define en_US.
 ENV LANGUAGE en_US.UTF-8
@@ -54,10 +55,9 @@ RUN set -ex \
     && pip install pytz \
     && pip install pyOpenSSL \
     && pip install ndg-httpsclient \
-    && pip install google-api-python-client \
     && pip install tmdbsimple \
     && pip install pyasn1 \
-    && pip install apache-airflow[crypto,celery,postgres,hive,hdfs,jdbc]==$AIRFLOW_VERSION \
+    && pip install apache-airflow[celery]==$AIRFLOW_VERSION \
     && pip install celery[redis]==3.1.17 \
     && apt-get remove --purge -yqq $buildDeps \
     && apt-get clean \
@@ -69,8 +69,8 @@ RUN set -ex \
         /usr/share/doc \
         /usr/share/doc-base
 
-COPY script/entrypoint.sh /entrypoint.sh
-COPY config/airflow.cfg ${AIRFLOW_HOME}/airflow.cfg
+COPY $HOST_AIRFLOW_HOME/docker/airflow/entrypoint.sh /entrypoint.sh
+COPY ${HOST_AIRFLOW_HOME}/config/airflow.cfg ${AIRFLOW_HOME}/airflow.cfg
 
 RUN chown -R airflow: ${AIRFLOW_HOME}
 

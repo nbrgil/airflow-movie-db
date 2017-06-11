@@ -2,6 +2,8 @@ version: '2'
 services:
     redis:
         image: 'redis:3.2.7'
+        networks:
+            - airflow-network
 
     postgres:
         image: postgres:9.6
@@ -9,11 +11,15 @@ services:
             - POSTGRES_USER=airflow
             - POSTGRES_PASSWORD=airflow
             - POSTGRES_DB=airflow
+        networks:
+            - airflow-network
 
     webserver:
         build:
             context: .
-            dockerfile: Dockerfile-airflow
+            dockerfile: Dockerfile
+            args:
+                HOST_AIRFLOW_HOME: ${AIRFLOW_HOME}
         image: movie-docker-airflow
         restart: always
         depends_on:
@@ -27,16 +33,20 @@ services:
             - POSTGRES_PASSWORD=airflow
             - POSTGRES_DB=airflow
         volumes:
-            - $PWD/../dags:/usr/local/airflow/dags/
-            - $PWD/../lib:/usr/local/airflow/lib/
+            - ${AIRFLOW_HOME}/dags:/usr/local/airflow/dags/
+            - ${AIRFLOW_HOME}/lib:/usr/local/airflow/lib/
         ports:
             - "8080:8080"
         command: webserver
+        networks:
+            - airflow-network
 
     flower:
         build:
             context: .
-            dockerfile: Dockerfile-airflow
+            dockerfile: Dockerfile
+            args:
+                HOST_AIRFLOW_HOME: ${AIRFLOW_HOME}
         image: movie-docker-airflow
         restart: always
         depends_on:
@@ -46,18 +56,22 @@ services:
         ports:
             - "5555:5555"
         command: flower
+        networks:
+            - airflow-network
 
     scheduler:
         build:
             context: .
-            dockerfile: Dockerfile-airflow
+            dockerfile: Dockerfile
+            args:
+                HOST_AIRFLOW_HOME: ${AIRFLOW_HOME}
         image: movie-docker-airflow
         restart: always
         depends_on:
             - webserver
         volumes:
-             - $PWD/../dags:/usr/local/airflow/dags/
-             - $PWD/../lib:/usr/local/airflow/lib/
+            - ${AIRFLOW_HOME}/dags:/usr/local/airflow/dags/
+            - ${AIRFLOW_HOME}/lib:/usr/local/airflow/lib/
         environment:
             - LOAD_EX=n
             - FERNET_KEY=46BKJoQYlPPOexq0OhDZnIlNepKFf87WFwLbfzqDDho=
@@ -66,18 +80,22 @@ services:
             - POSTGRES_PASSWORD=airflow
             - POSTGRES_DB=airflow
         command: scheduler
+        networks:
+            - airflow-network
 
     worker:
         build:
             context: .
-            dockerfile: Dockerfile-airflow
+            dockerfile: Dockerfile
+            args:
+                HOST_AIRFLOW_HOME: ${AIRFLOW_HOME}
         image: movie-docker-airflow
         restart: always
         depends_on:
             - scheduler
         volumes:
-            - $PWD/../dags:/usr/local/airflow/dags/
-            - $PWD/../lib:/usr/local/airflow/lib/
+            - ${AIRFLOW_HOME}/dags:/usr/local/airflow/dags/
+            - ${AIRFLOW_HOME}/lib:/usr/local/airflow/lib/
         environment:
             - FERNET_KEY=46BKJoQYlPPOexq0OhDZnIlNepKFf87WFwLbfzqDDho=
             - EXECUTOR=Celery
@@ -85,6 +103,9 @@ services:
             - POSTGRES_PASSWORD=airflow
             - POSTGRES_DB=airflow
         command: worker
+        networks:
+            - airflow-network
 
-volumes:
-    data-volume:
+networks:
+    airflow-network:
+        driver: bridge
