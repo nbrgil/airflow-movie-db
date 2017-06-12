@@ -14,7 +14,6 @@ ENV TERM linux
 # Airflow
 ARG AIRFLOW_VERSION=1.8.1
 ARG AIRFLOW_HOME=/usr/local/airflow
-ARG HOST_AIRFLOW_HOME
 
 # Define en_US.
 ENV LANGUAGE en_US.UTF-8
@@ -69,8 +68,8 @@ RUN set -ex \
         /usr/share/doc \
         /usr/share/doc-base
 
-COPY $HOST_AIRFLOW_HOME/docker/airflow/entrypoint.sh /entrypoint.sh
-COPY ${HOST_AIRFLOW_HOME}/config/airflow.cfg ${AIRFLOW_HOME}/airflow.cfg
+COPY script/entrypoint.sh /entrypoint.sh
+COPY config/airflow.cfg ${AIRFLOW_HOME}/airflow.cfg
 
 RUN chown -R airflow: ${AIRFLOW_HOME}
 
